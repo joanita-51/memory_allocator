@@ -7,22 +7,26 @@
 #define CHUNKSIZE (1 << 12) /* Initial heap size */
 
 /* Global variables */
-static char *heap_listp = NULL;
+static char *heap_listp;
 
 /* Memory allocator functions */
 int mm_init(void) {
-    if ((heap_listp = mem_sbrk(4 * WSIZE)) == (void *)-1) {
+    if ((heap_listp = mem_sbrk(4 * WSIZE)) == (void *)-1) 
         return -1;
-    }
     PUT(heap_listp, 0);                                 // Alignment padding
     PUT(heap_listp + (1 * WSIZE), PACK(DSIZE, 1));      // Prologue header
     PUT(heap_listp + (2 * WSIZE), PACK(DSIZE, 1));      // Prologue footer
     PUT(heap_listp + (3 * WSIZE), PACK(0, 1));          // Epilogue header
     heap_listp += (2 * WSIZE);
 
-    if (extend_heap(CHUNKSIZE / WSIZE) == NULL) {
+    printf("Heap list pointer: %p\n", heap_listp);
+
+
+    if (extend_heap(CHUNKSIZE / WSIZE) == NULL){
+        fprintf(stderr, "Heap extension failed.\n");
         return -1;
     }
+
     return 0;
 }
 
@@ -44,7 +48,7 @@ void *mm_malloc(size_t size) {
     if (size <= DSIZE)
         asize = 2 * DSIZE;
     else
-        asize = DSIZE * ((size + (DSIZE - 1)) / DSIZE);
+        asize = DSIZE * ((size + (DSIZE) + (DSIZE - 1)) / DSIZE);
 
     if ((bp = find_fit(asize)) != NULL) {
         place(bp, asize);
@@ -64,7 +68,10 @@ void *extend_heap(size_t words) {
     size_t size;
 
     size = (words % 2) ? (words + 1) * WSIZE : words * WSIZE;
-    if ((long)(bp = mem_sbrk(size)) == -1) return NULL;
+    if ((long)(bp = mem_sbrk(size)) == -1){
+        printf("The size is -1");
+        return NULL;
+    }
 
     PUT(HDRP(bp), PACK(size, 0));
     PUT(FTRP(bp), PACK(size, 0));
@@ -102,8 +109,8 @@ void *find_fit(size_t asize) {
     void *bp;
 
     /* Iterate through the free list */
-    for (bp = heap_listp; bp != NULL; bp = NEXT_FREE_BLOCK(bp)) {
-        if (GET_SIZE(HDRP(bp)) >= asize && !GET_ALLOC(HDRP(bp))) {
+    for (bp = heap_listp; GET_SIZE(HDRP(bp)) > 0; bp = NEXT_BLKP(bp)) {
+        if (!GET_ALLOC(HDRP(bp)) && (asize <= GET_SIZE(HDRP(bp))) ) {
             return bp;  // Found a suitable block
         }
     }

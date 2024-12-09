@@ -3,8 +3,8 @@
 #include "allocator.h"
 #include <errno.h> //for ENOMEM
 
-
-#define MAX_HEAP (20 * 1024 * 1024)  // Define the maximum heap size
+#define MAX_HEAP 10*1024*1024
+  // Define the maximum heap size
 
 /* Simulated memory functions */
 static char *mem_heap;        /* Points to the start of the heap */
@@ -13,14 +13,9 @@ static char *mem_max_addr;    /* Maximum address in the heap */
 
 void mem_init(void) {
     mem_heap = (char *)malloc(MAX_HEAP);
-    printf("Heap initialized at: %p\n", mem_heap);
-    if (mem_heap == NULL) {
-        fprintf(stderr, "Failed to initialize memory.\n");
-        exit(1);
-    }
-    mem_brk = mem_heap;
+    mem_brk = (char *)mem_heap;
     printf("Memory break initialized at: %p\n", mem_brk);
-    mem_max_addr = mem_heap + MAX_HEAP;
+    mem_max_addr = (char *)(mem_heap + MAX_HEAP);
     printf("Maximum address is: %p\n", mem_max_addr);
 
 }
@@ -53,7 +48,7 @@ int main(void) {
 
 
     /* Example usage */
-    void *ptr = mm_malloc(32);
+    void *ptr = mm_malloc(1);
     if (ptr == NULL)
     {
         printf("Memory allocation failed!\n");
